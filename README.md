@@ -53,13 +53,169 @@ Merge Request: [MR #50](https://gitlab.cern.ch/faser/faser-common/-/merge_reques
 The logs and the python based analysis notebooks can be found at [this repo](https://gitlab.cern.ch/faser/online/compression-studies). Please refer to the README for additional information.
 
 ### The Best Candidate
+| ![Chart](https://sumalyo.github.io/benchmarkFASER/FASERImages/tradeoff.png) | 
+|:--:| 
+| *Fig 2 Average Compression Ratio vs Average Compression Speed* |
 
+The approach for finding the best compressor is described below
+- Events were divided into a set of 10 classes based on event size (Class 0 having events of least size)
+- For each event class the average compression speed and compression ratio were calculated (for each compressor)
+- The resulting points were plotted on a graph and this helped to visualize the tradeoff. The compressor configuration offering the highest average compression ratio at the highest compression speed was considered optimal.
+<br>
+After running several experiments with recorded physics data it was determined that [ZSTD](https://github.com/facebook/zstd) was the best compressor. The __compression level 3 and 5__ were observed to be the most optimal configuration for implementation. 
 
 ## The Compression Engine
+| ![Chart](https://sumalyo.github.io/benchmarkFASER/FASERImages/Schematic.drawio.png) | 
+|:--:| 
+| *Fig 3 Schematic Diagram of the Implemnetation of the Compression Module* |
+
+<br>
+The final phase of the project was to develop a compression engine module with the DAQling framework that could be added to an existing configuration to obtain compressed physics events which can be recorded. The EventBuilder module is responsible for collecting the data fragments from event sources (like the Trigger Readout Board recievers) and building events which can be sent out to the FileWriter Module. The Compression engine sits in beetween these modules, recieiving events from the Eventbuilder compressing them and sending them out to the FileWriter module. 
+<p>
+It's designed in a non blocking manner with an internal buffer beign used to store incoming events and then reading events in a non blocking manner to compress and send out. It utilizes multithraeding to achive this utilizing the Producer Consumer Ques provided by the folly library. Important parts of the design are layed out in the following sections.
+
+```C++
+std::array<unsigned int, 2> tids = {threadid++, threadid++};
+    const auto & [ it, success ] =
+        m_compressionContexts.emplace(0, std::forward_as_tuple(queue_size, std::move(tids)));
+    assert(success);
+
+    // Start the context's consumer thread.
+    std::get<ThreadContext>(it->second)
+    .consumer.set_work(&CompressionEngineModule::flusher,this, // Threaded function
+    std::ref(std::get<PayloadQueue>(it->second)), // Primary
+    Compressor,m_buffer_size // Auxiliary Argumets;
+    );
+  assert(m_compressionContexts.size() == 1); // Only one context may be created
+```
+Here the threads are spawned and associated with the ques which would be used to store and compress events.
+
+```C++
+ for (auto & [ chid, ctx ] : m_compressionContexts) {
+  std::get<ThreadContext>(ctx).producer.set_work([&]() {
+  auto &pq = std::get<PayloadQueue>(ctx);
+  auto receiverChannel = m_config.getConnections(m_name)["receivers"][0]["chid"];
+  while (m_run)
+  {
+    DataFragment<daqling::utilities::Binary> blob;
+    auto chid = receiverChannel; // set to 0 for Physics data
+    while (!m_connections.receive(chid, blob) && m_run)
+    {
+      if (m_statistics) {
+      m_payload_queue_size = pq.sizeGuess();
+      }
+      std::this_thread::sleep_for(1ms);
+    }
+    DEBUG(" Received " << blob.size() << "B payload on channel: " << chid);
+    if (pq.sizeGuess() > 990)
+    {
+      WARNING("Payload Queue is filling up !!");
+    }
+    while (m_run && !pq.write(blob));
+    if (m_statistics && blob.size()) {
+      m_events_received++;
+    }
+  }
+  });
+```
+Here the section of the code is highlighted that is used to obtain events from the EventBuilder and write the payloads to the Producer queue.
+
+```C++
+compressorUsedFlush->setCompressionLevel(compressionLevel);
+    auto senderChannel = m_config.getConnections(m_name)["senders"][0]["chid"];
+  const auto flushVector = [&](std::vector<DataFragment<daqutils::Binary>> &eventBufferVector) {
+    float uncompressed_size = 0;
+    float compressed_size = 0;
+    for (auto & blob : eventBufferVector)
+    {
+    eventGot = std::make_unique<DAQFormats::EventFull>(blob.data<uint8_t *>(), blob.size());
+    uncompressed_size+=eventGot->payload_size();
+    if(compressorUsedFlush->compress(eventGot) == false)
+    {
+      m_status = STATUS_ERROR;
+    }
+    compressed_size+=eventGot->payload_size();
+    int channel = senderChannel; // Channel to send out compressed data 
+    auto *bytestream = eventGot->raw();
+    DataFragment<daqling::utilities::Binary> binData(bytestream->data(), bytestream->size());
+    DEBUG("Sending event " << eventGot->event_id() << " - " << eventGot->size() << " bytes on channel " << channel);
+    m_events_sent++;
+    m_connections.send(channel, binData); // to file writer
+    delete bytestream;
+    }
+    eventBufferVector.clear();
+    if (compressed_size!=0)
+    {m_compression_ratio.store(uncompressed_size/compressed_size);}
+  };
+  while (!m_stopWriters) {
+    while (pq.isEmpty() && !m_stopWriters) { // wait until we have something to write
+      flushVector(eventBuffer);
+      std::this_thread::sleep_for(1ms);
+    };
+
+  if (m_stopWriters) {
+    flushVector(eventBuffer);
+    return;
+  }
+
+  auto payload = pq.frontPtr();
+  DataFragment<daqutils::Binary> eventProcess(payload->data(), payload->size());
+  eventBuffer.push_back(eventProcess);
+  eventProcess = DataFragment<daqutils::Binary>();
+  if(eventBuffer.size() > maxBufferedEvents )
+  {
+    flushVector(eventBuffer);
+  }
+  pq.popFront();
+  
+  }
+```
+This section of the code is used to send out the compressed events.
+<br>
+
+Merge Request: [MR #203](https://gitlab.cern.ch/faser/online/faser-daq/-/merge_requests/203)<br>
+![MR_Merged](https://img.shields.io/badge/MR-In_Progress-yellow?style=for-the-badge&logo=appveyor)
+<br>
 
 ### Decompression On-the-Fly
+Another important requiremnet of the project was to implement support for decompression in a way that would be abstracted from the user. The user should not bother about a file containing compressed events or raw events, all the software used for analysis and reconstruction should be compatible with the compressed files. For this the loadPayload() method was altered to identify compressed events and decompress events on the fly. 
+```C++
+ void loadPayload(const uint8_t *data, size_t datasize) {
+    std::vector<uint8_t> decompressed_data_vector;
+    if (header.status & Compressed) // Compressed Event Detected
+      { 
+        // DEBUG("A Compressed Event is being read");
+        
+        // Detect Compression Algorithm And Decompress
+        if (decompressPayload(header.compression_code,data,static_cast<size_t>(datasize),decompressed_data_vector ))
+        {
+          data = &decompressed_data_vector[0];
+          datasize = decompressed_data_vector.size();
+          processCompressedData(datasize);
+        }
+        else
+        {
+            THROW(CompressionDataException,"DECOMPRESSION FAILED SKIPPING EVENT READ");
+        }
+      }
+    if (datasize != header.payload_size) {
+    THROW(EFormatException, "Payload size does not match header information");
+    }
+    for(int fragNum=0;fragNum<header.fragment_count;fragNum++) {
+        EventFragment *fragment=new EventFragment(data,datasize,true);
+        data+=fragment->size();
+        datasize-=fragment->size();
+        fragments[fragment->source_id()]=fragment;
+      }
+    }
+```
+The offline reconstruction software [calypso](https://gitlab.cern.ch/faser/calypso) was recompiled with support for handling compressed events and tested. It performed quite smoothly with compressed files passed as input with only an increase of about 1.5% time due to decompression. 
+
 
 ## Conclusion
+The viability of the Compression Engine could only be determined by high event rate tests. This was planned in the final days of the project. The Compression Engine would be subjected to a calibration LED Random Trigger which would simulate conditions that come up during proton proton collisions in the LHC. The code was compiled on a spare production server and hooked up to the full FASER TDAQ system. The module published metrics indicating the compression ratio, the number of events recieved and sent out and the size of the internal queue. The event rate was also monitored. The objective was to verify that there were no bottlencks due to compression and no events were dropped by the module. The trigger setup for the experiment would be as shown.
+
+
 
 ![footer](https://sumalyo.github.io/benchmarkFASER/FASERImages/footerImage.png)
 
