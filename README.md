@@ -15,9 +15,9 @@ The first part of the project involved __exploration__ of various open source lo
 After exploration of various algorithms the next task was to __develop a compression engine module__ that could be integrated in the full FASER DAQ system and can be configured to obtain compressed file for physics events directly from the acquisition system. The challenge here was to design a module that can handle high throughput working at high event rates (as high as 4kHz).
 <p>
 
-| ![DashBoard1](https://sumalyo.github.io/benchmarkFASER/FASERImages/banner.png) | 
+| ![DashBoard1](https://sumalyo.github.io/benchmarkFASER/FASERImages/Compression%20Dashboard%20High%20Rate.png) | 
 |:--:| 
-| *Space* |
+| *Fig 1: A Glimse of The Metrics Dashboard* |
 
 
 
