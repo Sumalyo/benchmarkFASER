@@ -215,6 +215,19 @@ The offline reconstruction software [calypso](https://gitlab.cern.ch/faser/calyp
 ## Conclusion
 The viability of the Compression Engine could only be determined by high event rate tests. This was planned in the final days of the project. The Compression Engine would be subjected to a calibration LED Random Trigger which would simulate conditions that come up during proton proton collisions in the LHC. The code was compiled on a spare production server and hooked up to the full FASER TDAQ system. The module published metrics indicating the compression ratio, the number of events recieved and sent out and the size of the internal queue. The event rate was also monitored. The objective was to verify that there were no bottlencks due to compression and no events were dropped by the module. The trigger setup for the experiment would be as shown.
 
+| ![TriggerDashboard](https://sumalyo.github.io/benchmarkFASER/FASERImages/triggersetup.png) | 
+|:--:| 
+| *Fig 4 The FASER Trigger Dashboard during High Rate Tests* |
+
+A __compression level 5__ was tested for the __ZSTD Compressor__
+
+| ![TriggerDashboard](https://sumalyo.github.io/benchmarkFASER/FASERImages/finaltest4.png) | 
+|:--:| 
+| *Fig 5 The Compression Module Metrics Dashboard* |
+
+It can be seen that the event rate was pushed up to 4kHz and the average compression ratio reported was around 2. This means that the __file sizes were halved__ during data acquisition. The internal queue size which has a capacity of about 1k was seen only going up to values of 200 which proved that there was no performance bottleneck and minimal latency was introduced in the system. No messages are dropped during compression. The Sender and the reciever queues seem to be fairly freed up indicating that the non blocking multi threaded approach is implemented successfully.
+
+Hence it can be concluded that the compression module is indeed implemented successfully and it can perform the desired action.
 
 
 ![footer](https://sumalyo.github.io/benchmarkFASER/FASERImages/footerImage.png)
