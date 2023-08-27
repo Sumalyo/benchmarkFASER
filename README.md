@@ -31,10 +31,21 @@ After exploration of various algorithms, the next task was to __develop a compre
 Before the commencement of the coding period the plan for contributions was rougghly chalked out during the community bonding phase. The development setup was finalized during this phase. A Docker based setup was planned as it helped replicate the production environment and also made managing packagages and dependencies much easier and streamlined. I found some issues with the existing docker image and worked with the mentors to add necessary services like supervisord and reddis to the container configuration. To add support for data compression additional dev packages were added to aid in building the prototype implemnetation. 
 Code for the new Dockerfile can be found here : [sumalyo_dev branch on faser-docker](https://gitlab.cern.ch/faser/docker/-/tree/sumalyo_dev?ref_type=heads)
 <br>
-[PR #2](https://gitlab.cern.ch/faser/docker/-/merge_requests/2)<br>
+Pull Request: [PR #2](https://gitlab.cern.ch/faser/docker/-/merge_requests/2)<br>
 ![PR_Merged](https://img.shields.io/badge/PR-In_Progress-yellow?style=for-the-badge&logo=appveyor)
 
 ## Raw File Compressor
+
+
+### The Best Candidate
+
+## The Compression Engine
+
+### Decompression On-the-Fly
+
+## Conclusion
+
+![footer](https://sumalyo.github.io/benchmarkFASER/FASERImages/footerImage.png)
 
 
 
