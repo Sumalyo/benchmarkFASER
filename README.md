@@ -31,13 +31,29 @@ After exploration of various algorithms, the next task was to __develop a compre
 Before the commencement of the coding period the plan for contributions was rougghly chalked out during the community bonding phase. The development setup was finalized during this phase. A Docker based setup was planned as it helped replicate the production environment and also made managing packagages and dependencies much easier and streamlined. I found some issues with the existing docker image and worked with the mentors to add necessary services like supervisord and reddis to the container configuration. To add support for data compression additional dev packages were added to aid in building the prototype implemnetation. 
 Code for the new Dockerfile can be found here : [sumalyo_dev branch on faser-docker](https://gitlab.cern.ch/faser/docker/-/tree/sumalyo_dev?ref_type=heads)
 <br>
-Pull Request: [PR #2](https://gitlab.cern.ch/faser/docker/-/merge_requests/2)<br>
-![PR_Merged](https://img.shields.io/badge/PR-In_Progress-yellow?style=for-the-badge&logo=appveyor)
+Merge Request: [MR #2](https://gitlab.cern.ch/faser/docker/-/merge_requests/2)<br>
+![MR_Merged](https://img.shields.io/badge/MR-In_Progress-yellow?style=for-the-badge&logo=appveyor)
 
 ## Raw File Compressor
-
+In the first phase of the project a standalone utility application `eventCompress` [Link to Code](https://gitlab.cern.ch/faser/faser-common/-/blob/sumalyo_dev_final/EventFormats/apps/eventCompress.cxx) was developed which could be used to compresss existing raw data files and record performance metrics during the process. It also had the capability to do decompression tests and record metrics like decompression speed. It could be used as:
+```
+Usage: eventCompress [-n nEventsMax -l -d -s -o <output_file> -c <config_file> ] <input_raw_filename> 
+   -n <no. events>:   Run Compression for n events only (optional)
+   -l --enableLog:    Enable logging for metrics and benchmarks (optional) 
+   -d --decomress:    Run Decompression tests (optional)
+   -s --silent:       suupress logs (optional)
+   -o --write:        specify file to write out to
+   -c --config:       specify file to read compressor config
+```
+The idea here was to compress event by event reading from a raw file and altering the header information to indicate compression and to specify the compression algorithm used. As each event was compressed individually the time taken for compression and the ratio of the uncompressed size to the compressed size was recorded for each event. These were logged in a JSON file which could be analysed with a python notebook to visualize the data as graphs and to understand performance tradeoffs. You can view a sample report [here](https://cloud.datapane.com/reports/VkG8X2A/compression-report-an-overview/). 
+<br>
+Merge Request: [MR #50](https://gitlab.cern.ch/faser/faser-common/-/merge_requests/50)<br>
+![MR_Merged](https://img.shields.io/badge/MR-In_Progress-yellow?style=for-the-badge&logo=appveyor)
+<br>
+The logs and the python based analysis notebooks can be found at [this repo](https://gitlab.cern.ch/faser/online/compression-studies). Please refer to the README for additional information.
 
 ### The Best Candidate
+
 
 ## The Compression Engine
 
