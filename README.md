@@ -1,5 +1,7 @@
 ![header](https://sumalyo.github.io/benchmarkFASER/FASERImages/banner.png)
 ![C++ Badge](https://img.shields.io/badge/Built_with-C_%2B%2B-purple?logo=cplusplus)
+![Python](https://img.shields.io/badge/python-3670A0?logo=python&logoColor=ffdd54)
+![Plotly](https://img.shields.io/badge/Plotly-%233F4F75.svg?logo=plotly&logoColor=white)
 ![daqling Badge](https://img.shields.io/badge/Powered_By-daqling-green?link=https://gitlab.cern.ch/ep-dt-di/daq/daqling)
 # Real-Time Lossless Data Compression for the FASER Experipent
 __Author__ : Sumalyo Datta <br>
@@ -26,7 +28,16 @@ After exploration of various algorithms, the next task was to __develop a compre
 | *Fig 1: A Glimpse of The Metrics Dashboard* |
 
 ## The Community Bonding Period
-Before the commencement of the project 
+Before the commencement of the coding period the plan for contributions was rougghly chalked out during the community bonding phase. The development setup was finalized during this phase. A Docker based setup was planned as it helped replicate the production environment and also made managing packagages and dependencies much easier and streamlined. I found some issues with the existing docker image and worked with the mentors to add necessary services like supervisord and reddis to the container configuration. To add support for data compression additional dev packages were added to aid in building the prototype implemnetation. 
+Code for the new Dockerfile can be found here : [sumalyo_dev branch on faser-docker](https://gitlab.cern.ch/faser/docker/-/tree/sumalyo_dev?ref_type=heads)
+<br>
+[PR #2](https://gitlab.cern.ch/faser/docker/-/merge_requests/2)<br>
+![PR_Merged](https://img.shields.io/badge/PR-In_Progress-yellow?style=for-the-badge&logo=appveyor)
+
+## Raw File Compressor
+
+
+
 
 
 
