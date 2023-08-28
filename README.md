@@ -28,14 +28,14 @@ After exploration of various algorithms, the next task was to __develop a compre
 | *Fig 1: A Glimpse of The Metrics Dashboard* |
 
 ## The Community Bonding Period
-Before the commencement of the coding period the plan for contributions was rougghly chalked out during the community bonding phase. The development setup was finalized during this phase. A Docker based setup was planned as it helped replicate the production environment and also made managing packagages and dependencies much easier and streamlined. I found some issues with the existing docker image and worked with the mentors to add necessary services like supervisord and reddis to the container configuration. To add support for data compression additional dev packages were added to aid in building the prototype implemnetation. 
+Before the coding period, the plan for contributions was roughly chalked out during the community bonding phase. The development setup was finalized during this phase. A Docker-based setup was planned as it helped replicate the production environment and made managing packages and dependencies much more manageable and streamlined. I found some issues with the existing docker image and worked with the mentors to add services like supervisord and reddis to the container configuration. To add support for data compression, additional dev packages were added to aid in building the prototype implementation. 
 Code for the new Dockerfile can be found here : [sumalyo_dev branch on faser-docker](https://gitlab.cern.ch/faser/docker/-/tree/sumalyo_dev?ref_type=heads)
 <br>
 Merge Request: [MR #2](https://gitlab.cern.ch/faser/docker/-/merge_requests/2)<br>
 ![MR_Merged](https://img.shields.io/badge/MR-In_Progress-yellow?style=for-the-badge&logo=appveyor)
 
 ## Raw File Compressor
-In the first phase of the project a standalone utility application `eventCompress` [Link to Code](https://gitlab.cern.ch/faser/faser-common/-/blob/sumalyo_dev_final/EventFormats/apps/eventCompress.cxx) was developed which could be used to compresss existing raw data files and record performance metrics during the process. It also had the capability to do decompression tests and record metrics like decompression speed. It could be used as:
+In the first phase of the project, a standalone utility application `eventCompress` [Link to Code](https://gitlab.cern.ch/faser/faser-common/-/blob/sumalyo_dev_final/EventFormats/apps/eventCompress.cxx) was developed which could be used to compress existing raw data files and record performance metrics during the process. It also could do decompression tests and record metrics like decompression speed. It could be used as:
 ```
 Usage: eventCompress [-n nEventsMax -l -d -s -o <output_file> -c <config_file> ] <input_raw_filename> 
    -n <no. events>:   Run Compression for n events only (optional)
@@ -45,7 +45,7 @@ Usage: eventCompress [-n nEventsMax -l -d -s -o <output_file> -c <config_file> ]
    -o --write:        specify file to write out to
    -c --config:       specify file to read compressor config
 ```
-The idea here was to compress event by event reading from a raw file and altering the header information to indicate compression and to specify the compression algorithm used. As each event was compressed individually the time taken for compression and the ratio of the uncompressed size to the compressed size was recorded for each event. These were logged in a JSON file which could be analysed with a python notebook to visualize the data as graphs and to understand performance tradeoffs. You can view a sample report [here](https://cloud.datapane.com/reports/VkG8X2A/compression-report-an-overview/). 
+The idea here was to compress event by event reading from a raw file and alter the header information to indicate compression and specify the compression algorithm used. As each event was compressed individually, the time taken for compression and the ratio of the uncompressed size to the compressed size were recorded for each event. These were logged in a JSON file, which could be analysed with a Python notebook to visualise the data as graphs and to understand performance tradeoffs. You can view a sample report [here](https://cloud.datapane.com/reports/VkG8X2A/compression-report-an-overview/). 
 <br>
 Merge Request: [MR #50](https://gitlab.cern.ch/faser/faser-common/-/merge_requests/50)<br>
 ![MR_Merged](https://img.shields.io/badge/MR-In_Progress-yellow?style=for-the-badge&logo=appveyor)
@@ -59,10 +59,10 @@ The logs and the python based analysis notebooks can be found at [this repo](htt
 
 The approach for finding the best compressor is described below
 - Events were divided into a set of 10 classes based on event size (Class 0 having events of least size)
-- For each event class the average compression speed and compression ratio were calculated (for each compressor)
-- The resulting points were plotted on a graph and this helped to visualize the tradeoff. The compressor configuration offering the highest average compression ratio at the highest compression speed was considered optimal.
+- For each event class, the average compression speed and compression ratio were calculated (for each compressor)
+- The resulting points were plotted on a graph, and this helped to visualize the tradeoff. The compressor configuration offering the highest average compression ratio at the highest compression speed was considered optimal.
 <br>
-After running several experiments with recorded physics data it was determined that [ZSTD](https://github.com/facebook/zstd) was the best compressor. The __compression level 3 and 5__ were observed to be the most optimal configuration for implementation. 
+After running several experiments with recorded physics data, it was determined that [ZSTD](https://github.com/facebook/zstd) was the best compressor. The __compression levels 3 and 5__ were observed to be the most optimal configuration for implementation. 
 
 ## The Compression Engine
 | ![Chart](https://sumalyo.github.io/benchmarkFASER/FASERImages/Schematic.drawio.png) | 
@@ -70,9 +70,9 @@ After running several experiments with recorded physics data it was determined t
 | *Fig 3 Schematic Diagram of the Implemnetation of the Compression Module* |
 
 <br>
-The final phase of the project was to develop a compression engine module with the DAQling framework that could be added to an existing configuration to obtain compressed physics events which can be recorded. The EventBuilder module is responsible for collecting the data fragments from event sources (like the Trigger Readout Board recievers) and building events which can be sent out to the FileWriter Module. The Compression engine sits in beetween these modules, recieiving events from the Eventbuilder compressing them and sending them out to the FileWriter module. 
+The final phase of the project was to develop a compression engine module with the DAQling framework that could be added to an existing configuration to obtain compressed physics events that can be recorded. The EventBuilder module is responsible for collecting the data fragments from event sources (like the Trigger Readout Board receivers) and building events that can be sent to the FileWriter Module. The Compression engine sits in between these modules, receiving events from the Eventbuilder, compressing them and sending them out to the FileWriter module. 
 <p>
-It's designed in a non blocking manner with an internal buffer beign used to store incoming events and then reading events in a non blocking manner to compress and send out. It utilizes multithraeding to achive this utilizing the Producer Consumer Ques provided by the folly library. Important parts of the design are layed out in the following sections.
+It's designed in a non-blocking manner, with an internal buffer to store incoming events and then read events from it to compress and send out. It utilizes multithreading to achieve this by using the Producer-Consumer Ques provided by the folly library. Essential parts of the design are laid out in the following sections.
 
 ```C++
 std::array<unsigned int, 2> tids = {threadid++, threadid++};
@@ -178,7 +178,7 @@ Merge Request: [MR #203](https://gitlab.cern.ch/faser/online/faser-daq/-/merge_r
 <br>
 
 ### Decompression On-the-Fly
-Another important requiremnet of the project was to implement support for decompression in a way that would be abstracted from the user. The user should not bother about a file containing compressed events or raw events, all the software used for analysis and reconstruction should be compatible with the compressed files. For this the loadPayload() method was altered to identify compressed events and decompress events on the fly. 
+Another essential requirement of the project was to implement support for decompression in a way that would be abstracted from the user. The user should not bother about a file containing compressed events or raw events; all the software used for analysis and reconstruction should be compatible with the compressed files. For this, the loadPayload() method was altered to identify compressed events and decompress events on the fly. 
 ```C++
  void loadPayload(const uint8_t *data, size_t datasize) {
     std::vector<uint8_t> decompressed_data_vector;
@@ -213,7 +213,7 @@ The offline reconstruction software [calypso](https://gitlab.cern.ch/faser/calyp
 
 
 ## Conclusion
-The viability of the Compression Engine could only be determined by high event rate tests. This was planned in the final days of the project. The Compression Engine would be subjected to a calibration LED Random Trigger which would simulate conditions that come up during proton proton collisions in the LHC. The code was compiled on a spare production server and hooked up to the full FASER TDAQ system. The module published metrics indicating the compression ratio, the number of events recieved and sent out and the size of the internal queue. The event rate was also monitored. The objective was to verify that there were no bottlencks due to compression and no events were dropped by the module. The trigger setup for the experiment would be as shown.
+The viability of the Compression Engine could only be determined by high event rate tests. This was planned in the final days of the project. The Compression Engine would be subjected to a calibration LED Random Trigger, simulating conditions during proton-proton collisions in the LHC. The code was compiled on a spare production server and hooked to the FASER TDAQ system. The module published metrics indicating the compression ratio, the number of events received and sent out, and the internal queue size. The event rate was also monitored. The objective was to verify that there were no bottlenecks due to compression and that the module dropped no events. The trigger setup for the experiment would be as shown.
 
 | ![TriggerDashboard](https://sumalyo.github.io/benchmarkFASER/FASERImages/triggersetup.png) | 
 |:--:| 
@@ -225,7 +225,7 @@ A __compression level 5__ was tested for the __ZSTD Compressor__
 |:--:| 
 | *Fig 5 The Compression Module Metrics Dashboard* |
 
-It can be seen that the event rate was pushed up to 4kHz and the average compression ratio reported was around 2. This means that the __file sizes were halved__ during data acquisition. The internal queue size which has a capacity of about 1k was seen only going up to values of 200 which proved that there was no performance bottleneck and minimal latency was introduced in the system. No messages are dropped during compression. The Sender and the reciever queues seem to be fairly freed up indicating that the non blocking multi threaded approach is implemented successfully.
+It can be seen that the event rate was pushed up to 4kHz, and the average compression ratio reported was around 2. This means that the __file sizes were halved__ during data acquisition. The internal queue size, which has a capacity of about 1k, was seen only going up to values of 200, which proved that there was no performance bottleneck and minimal latency was introduced in the system. No messages are dropped during compression. The Sender and the receiver queues are fairly freed up, indicating that the non-blocking multi-threaded approach is implemented successfully.
 
 Hence it can be concluded that the compression module is indeed implemented successfully and it can perform the desired action.
 
