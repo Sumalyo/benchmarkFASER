@@ -53,7 +53,7 @@ Merge Request: [MR #50](https://gitlab.cern.ch/faser/faser-common/-/merge_reques
 The logs and the python based analysis notebooks can be found at [this repo](https://gitlab.cern.ch/faser/online/compression-studies). Please refer to the README for additional information.
 
 ### The Best Candidate
-| ![Chart](FASERImages/FASER-Report-Compression.jpg) | 
+| ![Chart](https://sumalyo.github.io/benchmarkFASER/FASERImages/FASER-Report-Compression.jpg) | 
 |:--:| 
 | *Fig 2 Average Compression Ratio vs Average Compression Speed* |
 
